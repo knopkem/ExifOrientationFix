@@ -10,6 +10,8 @@
 #include <QtGui>
 #include <QtWidgets>
 #include <QtConcurrentMap>
+#include <QImageReader>
+#include <QImageWriter>
 
 class MoverPrivate
 {
@@ -50,7 +52,7 @@ bool Mover::performOperations(const QString &source, const QString &target, bool
     }
 
     d->currentTarget = target;
-	QString logs = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/yaps_logs";
+	QString logs = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/exif_logs";
     makedir(logs);
     QString logFilepath = logs + "/" + QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss") + ".txt";
     SimpleLog::startFileLogging(logFilepath);
@@ -60,6 +62,18 @@ bool Mover::performOperations(const QString &source, const QString &target, bool
 
     // query all files in the directory
     QStringList files = findAllFilesInDirectory(source, traverseSubdirectories);
+
+    foreach(const QString & file, files) {
+        QImageReader reader(file);
+        reader.setAutoTransform(false);
+        if (reader.canRead()) {
+            QImage image = reader.read();
+            QImage rotatedImage = image.transformed(QMatrix().rotate(90));
+            QImageWriter writer(target + "/" + QUuid::createUuid().toString() + ".jpg");
+            writer.setTransformation(QImageIOHandler::TransformationNone);
+            writer.write(rotatedImage);
+        }
+    }
 
     return true;
 }
