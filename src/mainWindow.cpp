@@ -170,7 +170,8 @@ QString MainWindow::openFileDialog()
 {
     QDir selDir;
     QFileDialog dialog(this);
-    dialog.setOption(QFileDialog::ShowDirsOnly, true);
+    // dialog.setOption(QFileDialog::ShowDirsOnly, true);
+    dialog.setFileMode(QFileDialog::DirectoryOnly);
     if (dialog.exec()) {
         QStringList selected = dialog.selectedFiles();
         if (!selected.empty())
@@ -187,7 +188,7 @@ void MainWindow::doCopy()
         return;
     }
 
-    d->mover->performOperations(d->sourceLineEdit->text(), d->targetLineEdit->text(), d->traverseCheckBox->isChecked());
+    d->mover->performOperations(d->sourceLineEdit->text(), d->targetLineEdit->text(), d->traverseCheckBox->isChecked(), 1280);
 }
 
 //--------------------------------------------------------------------------------------

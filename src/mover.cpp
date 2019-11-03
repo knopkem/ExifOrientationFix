@@ -42,7 +42,7 @@ Mover::~Mover()
 
 //--------------------------------------------------------------------------------------
 
-bool Mover::performOperations(const QString &source, const QString &target, bool traverseSubdirectories)
+bool Mover::performOperations(const QString &source, const QString &target, bool traverseSubdirectories, int maxSize)
 {
     d->sourcePath = source;
 
@@ -63,17 +63,75 @@ bool Mover::performOperations(const QString &source, const QString &target, bool
     // query all files in the directory
     QStringList files = findAllFilesInDirectory(source, traverseSubdirectories);
 
+    QProgressDialog progress(tr("Processing files..."), tr("Cancel"), 0, 0);
+    progress.setModal(true);
+    progress.setRange(0, d->filesTotal);
+
+    int i = 0;
     foreach(const QString & file, files) {
+
+        if (progress.wasCanceled()) {
+            break;
+        }
+
         QImageReader reader(file);
         reader.setAutoTransform(false);
         if (reader.canRead()) {
             QImage image = reader.read();
-            QImage rotatedImage = image.transformed(QMatrix().rotate(90));
+            QFlags<QImageIOHandler::Transformation> tr = reader.transformation();
+            int degree = 0;
+            bool horizontally = false;
+            bool vertically = false;
+
+            switch (tr)
+            {
+            case QImageIOHandler::TransformationNone:
+                break;
+            case QImageIOHandler::TransformationMirror:
+                vertically = true;
+                break;
+            case QImageIOHandler::TransformationFlip:
+                horizontally = true;
+                break;
+            case QImageIOHandler::TransformationRotate180:
+                degree = 180;
+                break;
+            case QImageIOHandler::TransformationRotate90:
+                degree = 90;
+                break;
+            case QImageIOHandler::TransformationMirrorAndRotate90:
+                vertically = true;
+                degree = 90;
+                break;
+            case QImageIOHandler::TransformationFlipAndRotate90:
+                horizontally = true;
+                degree = 90;
+                break;
+            case QImageIOHandler::TransformationRotate270:
+                degree = 270;
+                break;
+            }
+            QMatrix mat;
+            mat.rotate(degree);
+            QImage flippedImage = image.mirrored(horizontally, vertically);
+            QImage rotatedImage = flippedImage.transformed(mat);
+            QImage scaledImage = rotatedImage;
+
+            if (maxSize > 0) {
+                if (rotatedImage.height() > maxSize) {
+                    scaledImage = rotatedImage.scaledToHeight(maxSize);
+                }
+                else if (rotatedImage.width() > maxSize) {
+                    scaledImage = rotatedImage.scaledToWidth(maxSize);
+                }
+            }
             QImageWriter writer(target + "/" + QUuid::createUuid().toString() + ".jpg");
             writer.setTransformation(QImageIOHandler::TransformationNone);
-            writer.write(rotatedImage);
+            writer.write(scaledImage);
+            progress.setValue(i++);
         }
     }
+    progress.hide();
 
     return true;
 }
@@ -84,7 +142,6 @@ QStringList Mover::findAllFilesInDirectory( const QString& path, bool traverseSu
 {
     d->filesTotal = 0;
     QStringList result;
-    qDebug() << "traversal started";
 
     QDir dir(path);
     dir.setFilter(QDir::Files);
@@ -112,7 +169,6 @@ QStringList Mover::findAllFilesInDirectory( const QString& path, bool traverseSu
         }
     }
 
-    qDebug() << "traversal finished";
     progress.hide();
 
     return result;
