@@ -20,6 +20,7 @@ public:
 protected slots:
     void onSourceButtonClicked();
     void onTargetButtonClicked();
+    void updateAction(int state);
 
     void doCopy();
 

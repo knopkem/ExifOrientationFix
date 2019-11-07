@@ -42,7 +42,7 @@ Mover::~Mover()
 
 //--------------------------------------------------------------------------------------
 
-bool Mover::performOperations(const QString &source, const QString &target, bool traverseSubdirectories, int maxSize)
+bool Mover::performOperations(const QString &source, const QString &target, bool traverseSubdirectories, bool fixOrientation, int maxSize)
 {
     d->sourcePath = source;
 
@@ -68,6 +68,7 @@ bool Mover::performOperations(const QString &source, const QString &target, bool
     progress.setRange(0, d->filesTotal);
 
     int i = 0;
+    bool result = true;
     foreach(const QString & file, files) {
 
         if (progress.wasCanceled()) {
@@ -83,34 +84,37 @@ bool Mover::performOperations(const QString &source, const QString &target, bool
             bool horizontally = false;
             bool vertically = false;
 
-            switch (tr)
-            {
-            case QImageIOHandler::TransformationNone:
-                break;
-            case QImageIOHandler::TransformationMirror:
-                vertically = true;
-                break;
-            case QImageIOHandler::TransformationFlip:
-                horizontally = true;
-                break;
-            case QImageIOHandler::TransformationRotate180:
-                degree = 180;
-                break;
-            case QImageIOHandler::TransformationRotate90:
-                degree = 90;
-                break;
-            case QImageIOHandler::TransformationMirrorAndRotate90:
-                vertically = true;
-                degree = 90;
-                break;
-            case QImageIOHandler::TransformationFlipAndRotate90:
-                horizontally = true;
-                degree = 90;
-                break;
-            case QImageIOHandler::TransformationRotate270:
-                degree = 270;
-                break;
+            if (fixOrientation) {
+                switch (tr)
+                {
+                case QImageIOHandler::TransformationNone:
+                    break;
+                case QImageIOHandler::TransformationMirror:
+                    vertically = true;
+                    break;
+                case QImageIOHandler::TransformationFlip:
+                    horizontally = true;
+                    break;
+                case QImageIOHandler::TransformationRotate180:
+                    degree = 180;
+                    break;
+                case QImageIOHandler::TransformationRotate90:
+                    degree = 90;
+                    break;
+                case QImageIOHandler::TransformationMirrorAndRotate90:
+                    vertically = true;
+                    degree = 90;
+                    break;
+                case QImageIOHandler::TransformationFlipAndRotate90:
+                    horizontally = true;
+                    degree = 90;
+                    break;
+                case QImageIOHandler::TransformationRotate270:
+                    degree = 270;
+                    break;
+                }
             }
+
             QMatrix mat;
             mat.rotate(degree);
             QImage flippedImage = image.mirrored(horizontally, vertically);
@@ -125,15 +129,26 @@ bool Mover::performOperations(const QString &source, const QString &target, bool
                     scaledImage = rotatedImage.scaledToWidth(maxSize);
                 }
             }
-            QImageWriter writer(target + "/" + QUuid::createUuid().toString() + ".jpg");
+
+            QFileInfo info(file);
+            QString targetFileName = target + "/" + info.fileName();
+
+            QFile f(targetFileName);
+            if (f.exists()) {
+                targetFileName = target + "/" + QUuid::createUuid().toString() + ".jpg";
+            }
+
+            QImageWriter writer(targetFileName);
             writer.setTransformation(QImageIOHandler::TransformationNone);
-            writer.write(scaledImage);
+            if (!writer.write(scaledImage)) {
+                result = false;
+            }
             progress.setValue(i++);
         }
     }
     progress.hide();
 
-    return true;
+    return result;
 }
 
 //--------------------------------------------------------------------------------------

@@ -18,11 +18,16 @@ public:
     QLineEdit*      sourceLineEdit;
     QPushButton*    sourceButton;
     QCheckBox*      traverseCheckBox;
+    QCheckBox*      applyOrientationCheckBox;
+    QCheckBox*      resizeCheckBox;
+    QSpinBox*       maxSizeSpinBox;
     QLineEdit*      targetLineEdit;
     QPushButton*    targetButton;
 
     QLineEdit*      patternLineEdit;
     QLineEdit*      exampleLineEdit;
+
+    QLabel*         actionLabel;
 
     QPushButton*    copyButton;
 
@@ -142,12 +147,50 @@ QGroupBox* MainWindow::createTargetGroup()
 QGroupBox* MainWindow::createActionGroup()
 {
     QGroupBox* actionGroupBox = new QGroupBox(tr("Action"));
+    d->applyOrientationCheckBox = new QCheckBox(tr("Apply rotation according to Exif orientation"));
+    d->applyOrientationCheckBox->setChecked(true);
+    d->resizeCheckBox = new QCheckBox("Resize images");
+    d->resizeCheckBox->setChecked(true);
+    connect(d->resizeCheckBox, &QCheckBox::stateChanged, this, &MainWindow::updateAction);
+    d->maxSizeSpinBox = new QSpinBox();
+    d->maxSizeSpinBox->setRange(64, 999999);
+    d->maxSizeSpinBox->setValue(1280);
+
     d->copyButton = new QPushButton(tr("START"));
+
+    QHBoxLayout* hbox1 = new QHBoxLayout;
+    hbox1->addWidget(d->applyOrientationCheckBox);
+    hbox1->addStretch();
+
+    QHBoxLayout* hbox2 = new QHBoxLayout;
+    hbox2->addWidget(d->resizeCheckBox);
+    QLabel* label = new QLabel(tr("max width/height"));
+    hbox2->addWidget(d->maxSizeSpinBox);
+    hbox2->addWidget(label);
+    hbox2->addStretch();
+
+    d->actionLabel = new QLabel();
+    d->actionLabel->setMinimumWidth(300);
 
     QHBoxLayout* hboxAction = new QHBoxLayout;
     hboxAction->addWidget(d->copyButton);
-    actionGroupBox->setLayout(hboxAction);
+    hboxAction->addWidget(d->actionLabel);
+    hboxAction->addStretch();
+
+    QVBoxLayout* vboxAction = new QVBoxLayout;
+    vboxAction->addLayout(hbox1);
+    vboxAction->addLayout(hbox2);
+    vboxAction->addLayout(hboxAction);
+
+    actionGroupBox->setLayout(vboxAction);
     return actionGroupBox;
+}
+
+//--------------------------------------------------------------------------------------
+
+void MainWindow::updateAction(int state)
+{
+    d->maxSizeSpinBox->setEnabled(state == Qt::Checked);
 }
 
 //--------------------------------------------------------------------------------------
@@ -188,7 +231,13 @@ void MainWindow::doCopy()
         return;
     }
 
-    d->mover->performOperations(d->sourceLineEdit->text(), d->targetLineEdit->text(), d->traverseCheckBox->isChecked(), 1280);
+    int maxSize = -1;
+    if (d->resizeCheckBox->isChecked()) {
+        maxSize = d->maxSizeSpinBox->value();
+    }
+    d->actionLabel->setText("working...");
+    bool result = d->mover->performOperations(d->sourceLineEdit->text(), d->targetLineEdit->text(), d->traverseCheckBox->isChecked(), d->applyOrientationCheckBox->isChecked(), maxSize);
+    d->actionLabel->setText(result ? tr("Operation finished successfully") : tr("There where errors, check log file"));
 }
 
 //--------------------------------------------------------------------------------------

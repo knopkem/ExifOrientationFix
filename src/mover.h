@@ -18,7 +18,7 @@ public:
     Mover(QObject* parent= NULL);
     ~Mover();
 
-    bool performOperations(const QString& source, const QString& target, bool traverseSubdirectories, int maxSize);
+    bool performOperations(const QString& source, const QString& target, bool traverseSubdirectories, bool fixOrientation, int maxSize);
 
     static bool makedir(const QString& path);
 
