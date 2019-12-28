@@ -41,10 +41,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_TEMP ${CMAKE_BINARY_DIR}/temp)
 
 set(VERSION_MAJOR 1 CACHE STRING "${PROJECT_NAME} major version number.")
 set(VERSION_MINOR 1 CACHE STRING "${PROJECT_NAME} minor version number.")
-set(VERSION_BUILD 2 CACHE STRING "${PROJECT_NAME} build version number.")
+set(VERSION_BUILD 3 CACHE STRING "${PROJECT_NAME} build version number.")
 
 configure_file( cmake/version_config.h.in ${CMAKE_BINARY_DIR}/generated/version_config.h )
 include_directories( ${CMAKE_BINARY_DIR}/generated/ ) # Make sure it can be included

@@ -61,3 +61,25 @@ SOURCE_GROUP("Source Files" FILES ${SOURCES})
 SOURCE_GROUP("Generated Files" FILES ${HEADERS_MOC})
 
 install(TARGETS ${PROJECT_NAME}  RUNTIME DESTINATION  ${BIN_INSTALL_DIR} BUNDLE DESTINATION  ${BIN_INSTALL_DIR}  )
+
+#deploy qt plugins
+INSTALL( DIRECTORY ${QT5_ROOT_PREFIX}/plugins/platforms DESTINATION ${BIN_INSTALL_DIR} )
+INSTALL( DIRECTORY ${QT5_ROOT_PREFIX}/plugins/imageformats DESTINATION ${BIN_INSTALL_DIR} )
+
+# deploy using windeploy
+if (false)
+    # Retrieve the absolute path to qmake and then use that path to find
+    # the binaries
+    get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
+    get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
+
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E
+            env PATH="${_qt_bin_dir}" "${WINDEPLOYQT_EXECUTABLE}"
+                "$<TARGET_FILE:exifOrientationFix>"
+                "--dir" "${CMAKE_TEMP}"
+    COMMENT "Running windeployqt..."
+    )
+    INSTALL( DIRECTORY ${CMAKE_TEMP}/ DESTINATION ${BIN_INSTALL_DIR} )
+endif()
