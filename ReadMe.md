@@ -1,4 +1,6 @@
 # ExifOrientationFix
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fknopkem%2FExifOrientationFix.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fknopkem%2FExifOrientationFix?ref=badge_shield)
+
 
 A simple tool to apply the EXIF orientation directly to images for use with web browsers or other tools that do not understand EXIF metatdata.
 
@@ -20,3 +22,7 @@ A simple tool to apply the EXIF orientation directly to images for use with web 
 
 * just build the INSTALL target project or the PACKAGING target (needs NSIS on windows)
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fknopkem%2FExifOrientationFix.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fknopkem%2FExifOrientationFix?ref=badge_large)
